@@ -154,3 +154,22 @@ def firmware(args):
         subprocess.check_call(cmd, shell=True)
     except subprocess.CalledProcessError as e:
         sys.exit(e.returncode)
+
+# 'dpu' subcommand ("show platform dpu")
+@platform.command(
+    context_settings=dict(
+        ignore_unknown_options=True,
+        allow_extra_args=True
+    ),
+    add_help_option=False
+)
+@click.argument('args', nargs=-1, type=click.UNPROCESSED)
+def dpu(args):
+    """Show dpu information"""
+    cmd = "sudo interruptshow show {}".format(" ".join(args))
+
+    try:
+        subprocess.check_call(cmd, shell=True)
+    except subprocess.CalledProcessError as e:
+        sys.exit(e.returncode)
+

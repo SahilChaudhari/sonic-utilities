@@ -1176,5 +1176,33 @@
     },
     "ADVERTISE_NETWORK_TABLE|fccc:a250:a251::a6:1/128": {
         "profile": ""
+    },
+    "INTERRUPT_INFO|interrupt_1": {
+        "count": "4",
+        "description": "Info interrupt-1",
+        "name": "interrupt_1",
+        "severity": "LEVEL_INFO",
+        "timestamp": "20220807 13:25:31"
+    },
+    "INTERRUPT_INFO|interrupt_2": {
+        "count": "3",
+        "description": "Info interrupt-2",
+        "name": "interrupt_2",
+        "severity": "LEVEL_INFO",
+        "timestamp": "20220807 13:34:11"
+    },
+    "INTERRUPT_INFO|interrupt_3": {
+        "count": "2",
+        "description": "Error interrupt-1",
+        "name": "interrupt_3",
+        "severity": "LEVEL_ERROR",
+        "timestamp": "20220807 13:37:07"
+    },
+    "INTERRUPT_INFO|interrupt_4": {
+        "count": "1",
+        "description": "Fatal interrupt-1",
+        "name": "interrupt_4",
+        "severity": "LEVEL_FATAL",
+        "timestamp": "20220807 13:45:49"
     }
 }

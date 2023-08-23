@@ -139,6 +139,7 @@ setup(
         'scripts/storyteller',
         'scripts/syseeprom-to-json',
         'scripts/tempershow',
+        'scripts/interruptshow',
         'scripts/tunnelstat',
         'scripts/update_json.py',
         'scripts/voqutil',

@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+
+"""
+    Script to show interrupts information.
+"""
+from tabulate import tabulate
+from swsscommon.swsscommon import SonicV2Connector
+from natsort import natsorted
+import click
+
+
+header = ['Timestamp', 'Name', 'Count', 'Severity', 'Description']
+
+INTERRUPT_TABLE_NAME = 'INTERRUPT_INFO'
+TIMESTAMP_FIELD_NAME = 'timestamp'
+SEVERITY_FIELD_NAME = 'severity'
+DESCRIPTION_FIELD_NAME = 'description'
+COUNT_FIELD_NAME = 'count'
+
+TYPE_TO_SEVERITY_MAP = {
+    "fatal" : "LEVEL_FATAL" ,
+    "hwrma" : "LEVEL_HW_RMA",
+    "error" : "LEVEL_ERROR" ,
+    "info" : "LEVEL_INFO"  ,
+}
+
+
+class InterruptShow(object):
+    def __init__(self):
+        self.db = SonicV2Connector(host="127.0.0.1")
+        self.db.connect(self.db.STATE_DB)
+
+    def show(self, itype = None):
+        keys = self.db.keys(self.db.STATE_DB, INTERRUPT_TABLE_NAME + '*')
+        if not keys:
+            print('Interrupts Not detected')
+            return
+
+        table = []
+        for key in natsorted(keys):
+            key_list = key.split('|')
+            if len(key_list) != 2: # error data in DB, log it and ignore
+                print('Warn: Invalid key in table {}: {}'.format(INTERRUPT_TABLE_NAME, key))
+                continue
+
+            name = key_list[1]
+            data_dict = self.db.get_all(self.db.STATE_DB, key)
+            severity = data_dict[SEVERITY_FIELD_NAME]
+            if (itype == None) or (itype == severity):
+                table.append((
+                          data_dict[TIMESTAMP_FIELD_NAME],
+                          name, 
+                          data_dict[COUNT_FIELD_NAME],
+                          data_dict[SEVERITY_FIELD_NAME],
+                          data_dict[DESCRIPTION_FIELD_NAME]
+                          ))
+        
+        if table:
+            print(tabulate(table, header, tablefmt='simple'))
+        else:
+            print('No interrupt data available')
+
+class interruptType(click.ParamType):
+    name = "itype"
+
+    def convert(self, ctx, param, value):
+        """Custom callback to validate the greeting option."""
+        if value == None:
+            return value
+        acceptable_types = ['fatal', 'hwrma', 'error', 'all']
+        if value not in acceptable_types:
+            raise click.BadParameter(f"'{value}' is not an acceptable greeting. Please choose from: {', '.join(acceptable_types)}")
+        return value
+
+# @click.command()
+# @click.option('--itype', '-t', default = None, callback = interruptType(), help = "type of interrupt to show, supported are [fatal, hwrma, error, all]")
+# def cli(itype):
+#     """interruptshow - Command line utility for display interrupt information
+    
+#     itype: 
+    
+#     fatal - show fatal interrupts only\n
+#     hwrma - show hwrma interrupts only\n
+#     error - show error interrupts only\n
+#     all   - show all interrupts (fatal, hwrma, error, info)
+#     """
+#     interruptShow = InterruptShow()
+#     severity = TYPE_TO_SEVERITY_MAP.get(itype, None)
+#     interruptShow.show(severity)
+#     pass
+# ========================= Helper functions ===================================
+
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1
+
+ROOT_UID = 0
+
+def cli_show_help(ctx):
+    click.echo(ctx.get_help())
+    ctx.exit(EXIT_SUCCESS)
+
+
+def cli_abort(ctx, msg):
+    click.echo("Error: " + msg + ". Aborting...")
+    ctx.abort()
+
+
+def cli_exit(ctx, msg):
+    log_helper.print_info(msg)
+    ctx.exit(EXIT_SUCCESS)
+
+# ========================= CLI commands and groups ============================
+
+# 'interruptshow' command main entrypoint
+@click.group()
+@click.pass_context
+def cli(ctx):
+    """interruptshow - Command line utility for display interrupt information"""
+    ctx.ensure_object(dict)
+    pass
+
+# 'show' subgroup
+@cli.group()
+def show():
+    """Display dpu info"""
+    pass
+
+# 'interrupt' subcommand
+@show.command()
+@click.option('--itype', '-t', default = None, callback = interruptType(), help = "type of interrupt to show, supported are [fatal, hwrma, error, all]")
+@click.pass_context
+def interrupt(ctx,itype):
+    """Show platform dpu interrupt"""
+    try:
+        interruptShow = InterruptShow()
+        severity = TYPE_TO_SEVERITY_MAP.get(itype, None)
+        click.echo(interruptShow.show(severity))
+    except Exception as e:
+        cli_abort(ctx, str(e))
+
+if __name__ == "__main__":
+    cli()
